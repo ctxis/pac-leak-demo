@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <!-- backcompt for IE11 -->
+    <script src="/static/eventsource.js"></script>
+
+    <!-- pacserver.js uses asciiToHostNames from here --> 
+    <script src="/wpad.dat?notapacrequest"></script> 
+
+    <!-- All the demo code relies on this -->
+    <script src="/static/pacserver.js"></script>
+
+    <!-- Code for the various demos -->
+    <script src="/static/deanonymise.js"></script>
+    <script src="/static/oauth.js"></script>
+    <script src="/static/googlesteal.js"></script>
+
+    <script>
+    // connect to the server
+    var pac = new PACServer('/subscribe');
+    </script>
+</head>
+<body>
+    <h1>PAC Victim</h1>
+    <p>Nothing to see here!</p>
+</body>
+</html>

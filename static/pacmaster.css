@@ -1,0 +1,103 @@
+body { margin: 0; padding: 0; overflow: hidden}
+h1, h2, .buttons, #monitor { margin-left: 10px}
+a, a:visited { color: blue }
+#top { position: absolute; bottom: 33%; overflow-y: scroll; right: 0; left: 0; top: 70px }
+#bottom { position: absolute; top: 66%; bottom: 0; left:0; right: 0; background-color: #111 }
+body * { font-family: sans-serif }
+#urllog { max-height: 30em; overflow-y: scroll }
+#typebox { border: 1px solid grey; padding: .5em;}
+#templates { display: none}
+
+h3 { margin-top: 5px; margin-bottom: 0px; padding: 5px; background-color: #111; color: #0f0; font-family: consolas; font-weight: bold}
+.twitter { 
+    width:36px;
+    height:30px;
+    display: inline-block;
+    background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACQAAAAeCAYAAABE4bxTAAACmUlEQVR4Ab1XA8xdTRDd37ZtO/ht27MPNYMaUW3bdsOdi9q2bZs7973PvM3U7TNPMsHlGZ8VmYLPzn3Mg05NiborGNQTlG7uMeg9EQGw1b1VXI2KmPeESAO8Vv4zgGRLRWWgtHu9SaS1fnRevPq/oKiVVDRAXEJlI/gQIJ2RKvCTSAGA9KdUOhBKJISUluh0BNTLAKkcFJWCHXxNXII0Az7gh5EKPYb+XSQBTgegzuPvJGZUyqnlb8Dk/KcEQyK1u8xeUTGgU0MkCIl6W8Jk2JDGSaQ2EmmhRN1FMMBwOoQJqwnTch6Jq25s+oDfSdFW1Jvm3iYYgE7tCLk+AUj/uK57g4gCMKhtamRoUVWT7r/Soir4eoyXdoCiBvxS+GLWQ1MgM7nqfPf2cB+dHjvfOk8ijeIm8Jr0/JUI6c5JE0Ln/whhd75N9GNS6VyOHiDtTZaQ19JfhLas6bxUe417i0TqwQ9l0/wq8EpoyxpOU4l0GlBPAaWPZ5NQddu9J1y6fuCbWTekkyIcYLa+D5Ao+4T0RBEJoHTdbBOSBlWJTMh1bwJFVjYJee28J0U08ESWSO154WWhflaKeOFHek6iHsKaJmPpUvR3vFt7BiAR65TMRYg2cjbiJOR8n+l0eQwHEtQ21C+DhKbFjE6E4u6dgeI+yHJZJAuwct68oOj0odTJUJHXCnwk0gHWQRzq5DtKFwDLjFTBCgDQ8YDSR1KYN2ckBj9LPk3z3bu9VvBTMHQ3lrCppImFf4i8iAHWQj8C0izWtaBodzrmj0TSLHk5wslFZWru4zyZWaKmuA5IKuoFMwIPprF4qQEgrYm75ZHOANIIMAI/xxeRFGqJdbZEanLhIKe7AlJ/Xr4eg6qBQV/xOb6N694o0ohzAxPwCoC/+6UAAAAASUVORK5CYII=);
+}
+
+.logo {
+    display: inline-block;
+    width:32px;
+    height:32px;
+}
+
+
+.facebook  {
+    background-image: url(https://static.xx.fbcdn.net/rsrc.php/v2/y1/r/Y3dI7TtNnYf.png);
+    background-size: 32px;
+}
+
+.google { 
+    background-image: url(https://www.google.co.uk/favicon.ico);
+}
+.github { 
+    background-image: url(https://github.com/favicon.ico);
+}
+
+.linkedin {
+    background-size: 32px;
+    background-image: url(https://static.licdn.com/scds/common/u/images/logos/favicons/v1/favicon.ico)
+}
+
+.account { 
+    background-color: #eee;
+    -border: 1px solid #777;
+    min-height: 3em;
+    margin: .5em;
+    padding: .5em;
+    display: inline-block;
+    vertical-align: middle;
+    padding-left: 3em;
+    position: relative;
+    box-shadow: rgba(0,0,0,.7) 5px 5px 25px;
+}
+
+.account .photos { }
+.account span.logo, .account span.twitter { position: absolute; left: 5px; top: calc(50% - 16px) }
+.account img[data-attr=profileimg] { width: 50px; border-radius: 25px }
+.photos img { padding: 1px; width: 100px}
+.account * { vertical-align: middle}
+
+#urllog { background-color: #111; padding: 1em; }
+#urllog div { font-family: consolas; white-space: nowrap; color: green; font-size: 16pt }
+#urllog div.https { color: #0f0 }
+.buttons { position: absolute; top:0; right: 0; padding: 2em }
+.buttons button { border: none; background-color: #444; color: #0f0; padding: .5em 1em }
+
+#monitor { font-size: 16pt; margin: .5em; padding: 10px; line-height:1.5em }
+#monitor a[href$='.pdf']::after { 
+    content: '';
+    display: inline-block;
+    background-image: url('/static/images/pdf.png');
+    background-size: 32px;
+    width: 32px;
+    height: 32px;
+    margin-left: 5px;
+    vertical-align: middle;
+}
+
+#monitor a[href$='.jpg']::after { 
+    content: '';
+    display: inline-block;
+    background-image: url('/static/images/jpg.png');
+    background-size: 32px;
+    width: 32px;
+    height: 32px;
+    margin-left: 5px;
+    vertical-align: middle;
+}
+
+#monitor a[href$='.docx']::after { 
+    content: '';
+    display: inline-block;
+    background-image: url('/static/images/word.png');
+    background-size: 32px;
+    width: 32px;
+    height: 32px;
+    margin-left: 5px;
+    vertical-align: middle;
+}
+.typebox { height: 1.8em; margin: .5em 0 }
+.typebox span { border: 2px solid grey; padding: 5px }
+.typebox span::before { content: '🔎 ' }

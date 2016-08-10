@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>PAC Shell</title>
+<style> 
+#left, #right { float: left; width: 50%; }
+#in { width: 95% }
+</style>
+</head>
+
+<body>
+<div id="left">
+    <h1>PAC Shell</h1>
+    <p>Type JavaScript to evaluate in the PAC script</p>
+    <textarea id="in" rows="10" onkeydown="processInput(event)"></textarea><br>
+    <button onclick="pac.evalInPac(document.getElementById('in').value)">Send</button> or press Ctrl-Enter to send
+</div>
+<div id="right">
+    <h1>Output</h1>
+    <div id="out"></div>
+</div>
+
+<script src="/static/eventsource.js"></script>
+<script src="/wpad.dat?notapacrequest"></script>
+<script src="/static/pacserver.js"></script>
+<script>
+function processInput(e) {
+    if (e.ctrlKey && e.keyCode == 13) {
+        var v = document.getElementById('in').value;
+        pac.evalInPac(v);
+    }
+}
+
+function addChild(container, el, max) {
+    container.insertBefore(el, container.firstElementChild);
+
+    if (max > 0 && container.childElementCount > max)
+        container.removeChild(container.lastElementChild);
+}
+
+function handleEvalResponse(pac, data) {
+    var d = document.createElement('div');
+    var jsreply = data.data;
+    d.textContent = jsreply;
+    addChild(out, d, 20);
+}
+
+var pac = new PACServer('/subscribe');
+pac.addCallback('eval', handleEvalResponse);
+
+</script>
+</body>

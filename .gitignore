@@ -1,0 +1,4 @@
+download/**
+!download/.filesgohere
+*.pyc
+.vscode/
