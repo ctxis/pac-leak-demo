@@ -21,7 +21,7 @@ to fetch the required Python libraries.
 ## How to run this
 
 The PACServer.py script will start up a DNS server (port 53 UDP) and a web
-server (port 8081). It will serve a 'malicious' PAC script from /wpad.data.
+server (port 8081). It will serve a 'malicious' PAC script from /wpad.dat.
 
 You'll need two browsers - a 'victim' browser configured to use the malicious
 PAC script and DNS server and a 'master' browser that receives the leaked data.
@@ -78,17 +78,17 @@ long to fit inside a single hostname, so it will encode them in multiple domain
 requests.
 
 We set up 2-way communication between the browser and the PAC script. The
-browser encodes JavaScript code inside base-36 hostnames endiing in .e. The PAC
-script decodes these and eval's the JavaScript code. It then encodes the result
-with a .r domain. The Python DNS server decodes the .u and .e these and sends
-the result to the browser.
+browser encodes JavaScript code inside base-36 hostnames ending in .e. The PAC
+script decodes these and evals the JavaScript code. It then encodes the result
+with a .r domain. The Python DNS server decodes any .u and .r lookups it receives
+and sends the result to the browser.
 
 The PAC script has a list of 'leak' regexes and a list of 'block' regexes. These
-lists are set up via the eval mechanism described above. If the 'leak' list is
-non-empty, then the PAC script will only leak URLs that match one of the regexes
-in the list. The 'block' list is similar - if the PAC script is asked about a
-URLs that matches a block regex, it will tell the browser to use a non-existant
-proxy, preventing the browser from loading that URL.
+lists are set up by the browser via the eval mechanism described above. If the 
+'leak' list is non-empty, then the PAC script will only leak URLs that match one 
+of the regexes in the list. The 'block' list is similar - if the PAC script is 
+asked about a URL that matches a block regex, it will tell the browser to use 
+a non-existant proxy, preventing the browser from loading that single URL.
 
 The Python server gives each PAC script it serves a unique session ID. Every
 leaked URL or eval response that is encoded also contains this ID.
@@ -98,10 +98,9 @@ leaked URL or eval response that is encoded also contains this ID.
 The Python server script does a few things. It hands out the malicious PAC
 scripts, it decodes DNS-encoded data from the PAC scripts. It also facilitates
 communication between the 'victim' browsers and the 'master' browser. Events are
-streamed from the server to web pages via HTML5 server-sent events channels.
-Each event stream has a unique ID. The server tries to link each PAC session ID
-with an event stream so it can route data received from each PAC script back to
-the corrent event stream.
+streamed from the server to web pages via [HTML5 server-sent events](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events) channels. Each event stream has a unique ID. The 
+server tries to link each PAC session ID with an event stream so it can route 
+data received from each PAC script back to the corrent event stream.
 
 ### Attack scripts
 
@@ -111,7 +110,7 @@ PACServer class in pacserver.js to do their stuff. PACServer is used to
 communicate with the PAC script, with the web server, and to communicate between
 the victim and master webpages.
 
-The demos all work by triggering 302 redirects and page prerenders. They then
+The demos all work by triggering 302 redirects and [page prerenders](https://css-tricks.com/prefetching-preloading-prebrowsing/#article-header-id-4). They then
 register to receive URLs leaked from their PAC script, and send the relevant
 bits to the master page. The master page recieves and displays all URLs leaked
 by all PAC scripts, as well as messages received from the victims.
